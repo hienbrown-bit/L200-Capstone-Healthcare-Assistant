@@ -4,6 +4,8 @@ import json
 import logging
 from pydantic import BaseModel, Field, ValidationError
 from google.adk.agents.llm_agent import LlmAgent
+from google.adk.models.llm_response import LlmResponse
+from google.genai import types
 
 
 # --- Pillar 4: True Structured JSON Logging (using json.dumps) ---
@@ -96,99 +98,3 @@ def get_upcoming_appointments(patient_id: str) -> str:
     Returns:
         str: JSON string of upcoming appointments or guided error recovery message.
     """
-    try:
-        validated = AppointmentInput(patient_id=patient_id)
-    except ValidationError as ve:
-        return f"Validation Error: Invalid patient_id ({ve}). Expected format like 'pt-9821'."
-
-    logger.info(f"INTENT: Querying upcoming appointments for {validated.patient_id}")
-    filename = f"appointments_{validated.patient_id}.json"
-
-    try:
-        with open(filename, "r") as file:
-            appointments = json.load(file)
-            logger.info(f"OUTCOME: Retrieved appointments for {validated.patient_id}")
-            return json.dumps(appointments, indent=2)
-    except FileNotFoundError:
-        err_msg = f"Error: No upcoming appointment records found for '{validated.patient_id}'."
-        logger.warning(f"OUTCOME: {err_msg}")
-        return err_msg
-
-
-def draft_and_approve_family_update(patient_id: str, summary_of_visit: str, auto_approve: bool = False) -> dict:
-    """
-    Drafts a friendly health update for family members and halts for explicit Human-in-the-Loop approval.
-
-    Args:
-        patient_id (str): The unique identifier of the patient, e.g., 'pt-9821'.
-        summary_of_visit (str): Plain-English summary of the clinical visit.
-        auto_approve (bool): Set to True to skip manual terminal prompt during automated runs.
-
-    Returns:
-        dict: Approval status and final drafted text.
-    """
-    try:
-        validated = FamilyDraftInput(patient_id=patient_id, summary_of_visit=summary_of_visit)
-    except ValidationError as ve:
-        return {"status": "ERROR", "message": f"Invalid draft inputs: {ve}", "final_draft": None}
-
-    logger.info(f"INTENT: Drafting family update for {validated.patient_id}")
-    safe_summary = redact_pii(validated.summary_of_visit)
-    family_message_draft = (
-        f"Subject: Quick Health Update\n\n"
-        f"Hi everyone,\n\n"
-        f"I wanted to share an update: {safe_summary}\n\n"
-        f"Love,\nAlex"
-    )
-
-    print("\n" + "=" * 50)
-    print("HUMAN-IN-THE-LOOP CHECKPOINT")
-    print(family_message_draft)
-    print("=" * 50)
-
-    if auto_approve:
-        decision = "YES"
-    else:
-        try:
-            decision = input("Do you approve sending/saving this draft? (YES/NO): ").strip().upper()
-        except Exception:
-            decision = "NO"
-
-    if decision == "YES":
-        logger.info("OUTCOME: Family update approved by human user.")
-        return {"status": "APPROVED", "final_draft": family_message_draft}
-    logger.warning("OUTCOME: Family update rejected by human user.")
-    return {"status": "REJECTED", "final_draft": None}
-
-
-# --- Pillar 2: System Prompt ---
-healthcare_instructions = """
-You are a warm, supportive Personal Healthcare Assistant. Your core rules are:
-1. Translate complex clinical records into simple, compassionate layman's terms.
-2. Help the patient prepare for upcoming visits with 2-3 personalized questions.
-3. NEVER prescribe, diagnose, or make up medical advice. Instantly instruct the patient to contact their doctor.
-4. Protect user privacy.
-"""
-
-# --- Pillar 3: Strategic Model Routing (Sub-Agents) ---
-records_agent = LlmAgent(
-    model="gemini-3.5-flash-lite",
-    name="records_retriever",
-    instruction="Extract raw patient histories, dates, and upcoming schedules precisely.",
-    tools=[read_clinical_notes, get_upcoming_appointments],
-)
-
-translator_agent = LlmAgent(
-    model="gemini-1.5-pro",
-    name="clinical_translator",
-    instruction="Translate medical jargon into compassionate, simple terms and draft custom doctor-visit prep guides.",
-    tools=[],
-)
-
-root_agent = LlmAgent(
-    model="gemini-3.5-flash-lite",
-    name="healthcare_coordinator",
-    instruction=healthcare_instructions,
-    tools=[draft_and_approve_family_update],
-    sub_agents=[records_agent, translator_agent],
-)
