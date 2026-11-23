@@ -1,0 +1,14 @@
+{
+  "patient_id": "pt-9821",
+  "upcoming_appointments": [
+    {
+      "appointment_id": "apt-505",
+      "date": "2026-11-23",
+      "time": "10:00 AM",
+      "doctor": "Dr. Sarah Smith, MD",
+      "department": "Stanford Health Care - Orthopedics Clinic",
+      "location": "300 Pasteur Dr, Palo Alto, CA 94304",
+      "reason": "Left knee follow-up & MRI results review"
+    }
+  ]
+}

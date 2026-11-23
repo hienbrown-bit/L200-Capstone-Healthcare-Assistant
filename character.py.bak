@@ -1,0 +1,70 @@
+import json
+import logging
+import os
+from google.adk.agents.llm_agent import LlmAgent
+from google.genai import types
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logger = logging.getLogger("health_assistant")
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+def read_clinical_notes(patient_id: str, visit_date: str) -> str:
+    """
+    Securely reads and extracts doctor's notes, lab results, and active diagnoses
+    from the patient's local clinical record file.
+    """
+    filename = os.path.join(BASE_DIR, f"clinical_notes_{patient_id}_{visit_date}.txt")
+    try:
+        with open(filename, "r") as file:
+            content = file.read()
+        return f"--- CLINICAL RECORD START ---\n{content}\n--- CLINICAL RECORD END ---"
+    except FileNotFoundError:
+        return (
+            f"Error: The clinical record for Patient ID '{patient_id}' on date '{visit_date}' "
+            f"could not be found. Please ask the user to verify the patient ID and visit date."
+        )
+    except Exception as e:
+        return f"System Error reading record: {str(e)}"
+
+def get_upcoming_appointments(patient_id: str) -> str:
+    """
+    Retrieves the date, time, doctor, and department for the patient's
+    upcoming appointments at Stanford Health Care.
+    """
+    filename = os.path.join(BASE_DIR, f"appointments_{patient_id}.json")
+    try:
+        with open(filename, "r") as file:
+            appointments = json.load(file)
+        return json.dumps(appointments, indent=2)
+    except FileNotFoundError:
+        return f"Error: No upcoming appointment records found for Patient ID '{patient_id}'."
+    except Exception as e:
+        return f"System Error reading appointments: {str(e)}"
+
+healthcare_instructions = """
+You are a compassionate, clear, and highly supportive Personal Healthcare Assistant.
+Your primary goal is to help patients be better stewards of their own health information.
+
+Your Core Rules & Responsibilities:
+1. Clinical Translation: When asked about clinical notes or lab results, call `read_clinical_notes` (default patient_id='pt-9821', visit_date='2026-11-15' if not specified) and translate complex medical terms into warm, simple layman's terms.
+2. Appointment Prep: When asked about upcoming visits, call `get_upcoming_appointments` (default patient_id='pt-9821') and suggest 2-3 smart questions to ask the doctor.
+3. Family Updates: Help the patient draft clear, simple summaries they can review and share with family.
+4. Speech-Friendly Formatting: Keep responses concise (3-5 short sentences) and avoid emojis or heavy markdown symbols so text-to-speech reads smoothly.
+5. ABSOLUTE MEDICAL SAFETY: You are an assistant, NOT a doctor. Never diagnose conditions, prescribe medications, or give medical advice. Politely refuse prescription requests and refer the user to their physician.
+"""
+
+root_agent = LlmAgent(
+    model="gemini-3.5-flash",
+    name="healthcare_personal_assistant",
+    instruction=healthcare_instructions,
+    generate_content_config=types.GenerateContentConfig(
+        http_options=types.HttpOptions(
+            retry_options=types.HttpRetryOptions(
+                attempts=5,
+                initial_delay=1.0
+            )
+        )
+    ),
+    tools=[read_clinical_notes, get_upcoming_appointments]
+)

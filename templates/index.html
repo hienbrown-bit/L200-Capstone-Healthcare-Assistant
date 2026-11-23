@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WakuWaku</title>
+    <title>Healthcare Personal Assistant</title>
     <link rel="stylesheet" href="/static/style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,17 +12,24 @@
 <body>
     <div class="chat-container">
         <header class="chat-header">
-            <h1>AI Companion</h1>
+            <div class="header-brand">
+                <span class="medical-cross" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="20px" height="20px">
+                        <path d="M9.5 3h5v6.5H21v5h-6.5V21h-5v-6.5H3v-5h6.5V3z"/>
+                    </svg>
+                </span>
+                <h1>Healthcare Personal Assistant</h1>
+            </div>
         </header>
         <div class="character-viewer">
-            <img id="character-image" src="/static/images/char-mouth-closed.png" alt="WakuWaku">
+            <img id="character-image" src="/static/images/char-mouth-closed.png" alt="Healthcare Personal Assistant">
         </div>
         <p id="status">Ask me something!</p>
         <footer class="chat-input-area">
-            <select id="voice-select"></select>
-            <textarea id="text-input" placeholder="Ask me anything..."></textarea>
-            <button id="send-button">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24px" height="24px"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+            <select id="voice-select" aria-label="Voice selection"></select>
+            <textarea id="text-input" placeholder="Ask about your clinical notes, labs, or appointments..."></textarea>
+            <button id="send-button" aria-label="Send message">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="22px" height="22px"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
             </button>
         </footer>
     </div>

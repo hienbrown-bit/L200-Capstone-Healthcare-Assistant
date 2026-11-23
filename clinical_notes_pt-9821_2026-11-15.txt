@@ -1,0 +1,19 @@
+Patient Name: Alex Doe
+Patient ID: pt-9821
+Visit Date: 2026-11-15
+Department: Stanford Health Care - Orthopedics
+Attending Physician: Dr. Sarah Smith, MD
+
+CHIEF COMPLAINT:
+Left knee pain and localized swelling following an acute inversion/rotational event during soccer practice 3 days prior.
+
+CLINICAL IMPRESSION:
+1. Acute left knee joint effusion.
+2. Suspected partial tear of the Anterior Cruciate Ligament (ACL), rule out meniscus involvement.
+3. Mild localized edema of the surrounding soft tissue.
+
+PLAN & TREATMENT:
+- Maintain strict R.I.C.E. protocol (Rest, Ice, Compression, Elevation).
+- Administer Ibuprofen 400mg tid (three times a day) pc (after meals) prn (as needed) for pain and inflammation.
+- Referred to physical therapy for range-of-motion evaluation.
+- Scheduled for an MRI of the left knee joint to evaluate structural integrity.
