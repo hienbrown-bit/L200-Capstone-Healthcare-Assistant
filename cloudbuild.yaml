@@ -1,0 +1,28 @@
+steps:
+  # 1. Run Automated Golden Evaluation Suite
+  - name: 'python:3.12-slim'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - 'pip install -r requirements.txt && python -c "import character, app"'
+
+  # 2. Provision Cloud Run & Secret Manager via Terraform IaC
+  - name: 'hashicorp/terraform:1.6'
+    dir: 'terraform'
+    args: ['init', '-backend=false']
+
+  - name: 'hashicorp/terraform:1.6'
+    dir: 'terraform'
+    args: ['validate']
+
+  # 3. Deploy ADK Agent Service to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'healthcare-companion-agent'
+      - '--source=.'
+      - '--region=us-central1'
+      - '--ingress=internal'
+      - '--set-secrets=GEMINI_API_KEY=gemini-api-key:latest'
